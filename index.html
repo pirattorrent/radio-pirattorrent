@@ -58,7 +58,6 @@
             z-index: 5;
         }
 
-        /* Общий контейнер, внутри которого живет и плеер, и разделенная орбита */
         .player-wrapper {
             position: relative;
             width: 90%;
@@ -174,7 +173,6 @@
             height: 100%;
         }
 
-        /* Слои орбиты: задний уходит под карточку, передний — поверх */
         .orbit-layer-back {
             position: absolute;
             top: 50%;
@@ -182,7 +180,7 @@
             width: 0;
             height: 0;
             pointer-events: none;
-            z-index: 1; /* Под карточкой (z-index: 10) */
+            z-index: 1;
         }
 
         .orbit-layer-front {
@@ -192,7 +190,7 @@
             width: 0;
             height: 0;
             pointer-events: none;
-            z-index: 20; /* Поверх карточки (z-index: 10) */
+            z-index: 20;
         }
 
         .orbit-item {
@@ -249,10 +247,8 @@
 
     <div class="stage">
         <div class="player-wrapper">
-            <!-- Задний слой орбиты (идет под плеер) -->
             <div class="orbit-layer-back" id="orbitBack"></div>
 
-            <!-- Сама карточка плеера -->
             <div class="player-card" id="playerCard">
                 <div id="youtube-player-container">
                     <div id="youtube-player"></div>
@@ -275,7 +271,6 @@
                 </div>
             </div>
 
-            <!-- Передний слой орбиты (идет поверх плеера) -->
             <div class="orbit-layer-front" id="orbitFront"></div>
         </div>
     </div>
@@ -349,7 +344,6 @@
             orbitElements.push(a);
         });
 
-        // Анимация вращения с физическим перемещением между слоями DOM
         let angle = 0;
         function animateOrbit() {
             angle += 0.0055; 
@@ -370,7 +364,6 @@
                 el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
                 el.style.opacity = opacity;
 
-                // Перекидываем иконку в правильный контейнер в зависимости от полусферы
                 if (depth < 0.5) {
                     if (el.parentNode !== orbitBack) {
                         orbitBack.appendChild(el);
@@ -386,7 +379,6 @@
         }
         requestAnimationFrame(animateOrbit);
 
-        // Логика плеера
         let ytPlayer = null;
         let shuffledQueue = [];
         let queueIndex = 0;
@@ -482,7 +474,7 @@
                 videoId: initialVideoId,
                 playerVars: {
                     'playsinline': 1,
-                    'controls': 0,
+                    'controls': 1, // Включаем нативные контроллеры YouTube на секунду для симуляции
                     'autoplay': 0,
                     'disablekb': 1,
                     'modestbranding': 1
@@ -520,7 +512,7 @@
             const actualIndex = shuffledQueue[queueIndex];
             const currentVideoId = extractYouTubeId(playlist[actualIndex]);
 
-               if (event.data === YT.PlayerState.PLAYING) {
+            if (event.data === YT.PlayerState.PLAYING) {
                 playBtn.innerHTML = '<span class="pause-icon"></span>';
                 startEqualizer(currentVideoId);
             } 
@@ -538,13 +530,68 @@
             }
         }
 
+        // Хитрый эмулятор физического клика по iframe YouTube при нажатии на нашу кнопку
+        function simulateNativeYouTubeClick() {
+            const iframe = document.getElementById('youtube-player');
+            if (!iframe) return;
+
+            const rect = iframe.getBoundingClientRect();
+            // Находим центр iframe плеера
+            const clientX = rect.left + rect.width / 2;
+            const clientY = rect.top + rect.height / 2;
+
+            // Создаем и диспатчим реальные события тапа прямо в координаты фрейма
+            const touchObj = new Touch({
+                identifier: Date.now(),
+                target: iframe,
+                clientX: clientX,
+                clientY: clientY,
+                radiusX: 2.5,
+                radiusY: 2.5,
+                rotationAngle: 0,
+                force: 1
+            });
+
+            const touchStartEvt = new TouchEvent('touchstart', {
+                cancelable: true,
+                bubbles: true,
+                touches: [touchObj],
+                targetTouches: [touchObj],
+                changedTouches: [touchObj]
+            });
+
+            const touchEndEvt = new TouchEvent('touchend', {
+                cancelable: true,
+                bubbles: true,
+                touches: [],
+                targetTouches: [],
+                changedTouches: [touchObj]
+            });
+
+            iframe.dispatchEvent(touchStartEvt);
+            iframe.dispatchEvent(touchEndEvt);
+
+            // Дублируем стандартным кликом мыши для полной надежности
+            const mouseEvent = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true,
+                clientX: clientX,
+                clientY: clientY
+            });
+            iframe.dispatchEvent(mouseEvent);
+        }
+
         playBtn.addEventListener('click', () => {
             if (!isReady) return;
             const state = ytPlayer.getPlayerState();
             if (state === YT.PlayerState.PLAYING) {
                 ytPlayer.pauseVideo();
             } else {
+                // Сначала запускаем стандартным методом API
                 playCurrentTrack();
+                // И сразу же отправляем физический эмулированный клик во фрейм для Instagram
+                setTimeout(simulateNativeYouTubeClick, 50);
             }
         });
 
@@ -563,4 +610,3 @@
 </body>
 </html>
 
-                
