@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>radio·pirattorrent</title>
+    <title>·radio·pirattorrent</title>
     <style>
         * {
             box-sizing: border-box;
@@ -47,6 +47,39 @@
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             background-size: 100% 3px, 6px 100%;
             opacity: 0.7;
+        }
+
+        /* Подсказка для Instagram в правом верхнем углу */
+        .instagram-hint {
+            display: none; /* Скрыта по умолчанию */
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 25;
+            background: rgba(20, 25, 30, 0.8);
+            border: 1px solid rgba(43, 116, 143, 0.6);
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 0 14px rgba(43, 116, 143, 0.5);
+            text-align: right;
+            animation: fadeInHint 0.5s ease-out;
+            max-width: 200px;
+        }
+
+        .instagram-hint span {
+            display: block;
+            font-size: 9px;
+            font-weight: 300;
+            letter-spacing: 0.2px;
+            color: #a2c4d0;
+            text-transform: lowercase;
+            line-height: 1.3;
+            text-shadow: 0 0 6px rgba(162, 196, 208, 0.4);
+        }
+
+        @keyframes fadeInHint {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Центр сцены для плеера и орбиты */
@@ -212,6 +245,11 @@
 
     <div class="vhs-overlay"></div>
 
+    <!-- Минималистичная подсказка для Instagram в правом верхнем углу -->
+    <div class="instagram-hint" id="instaHint">
+        <span>откройте в браузере<br>для стабильного звука</span>
+    </div>
+
     <div class="stage">
         <!-- Плеер -->
         <div class="player-card" id="playerCard">
@@ -246,6 +284,11 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
+        // Показываем подсказку в правом верхнем углу, если открыто в Инстаграме
+        if (/Instagram/i.test(navigator.userAgent)) {
+            document.getElementById('instaHint').style.display = 'block';
+        }
+
         // =========================================================================
         // МЕСТО ДЛЯ ВАШИХ ССЫЛОК НА МУЗЫКУ
         // =========================================================================
@@ -350,7 +393,6 @@
         let shuffledQueue = [];
         let queueIndex = 0;
         let isReady = false;
-        let hasInteracted = false;
         let equalizerInterval = null;
 
         const playBtn = document.getElementById('playBtn');
@@ -443,7 +485,7 @@
                 playerVars: {
                     'playsinline': 1,
                     'controls': 0,
-                    'autoplay': 1
+                    'autoplay': 0
                 },
                 events: {
                     'onReady': onPlayerReady,
@@ -456,33 +498,7 @@
         function onPlayerReady(event) {
             isReady = true;
             setupMediaSession();
-            
-            // Пробуем автозапуск через секунду
-            setTimeout(() => {
-                tryAutoPlay();
-            }, 1000);
         }
-
-        function tryAutoPlay() {
-            if (!isReady) return;
-            const actualIndex = shuffledQueue[queueIndex];
-            const videoId = extractYouTubeId(playlist[actualIndex]);
-            if (videoId) {
-                ytPlayer.loadVideoById(videoId);
-                ytPlayer.playVideo();
-            }
-        }
-
-        // Страховка для Instagram/мобильных браузеров: первое касание экрана запустит музыку, если автозапуск был заблокирован
-        document.addEventListener('pointerdown', () => {
-            if (!hasInteracted && isReady && ytPlayer) {
-                hasInteracted = true;
-                const state = ytPlayer.getPlayerState();
-                if (state !== YT.PlayerState.PLAYING) {
-                    playCurrentTrack();
-                }
-            }
-        }, { once: true });
 
         function playCurrentTrack() {
             if (!isReady || playlist.length === 0) return;
@@ -524,25 +540,22 @@
 
         playBtn.addEventListener('click', () => {
             if (!isReady) return;
-            hasInteracted = true;
             const state = ytPlayer.getPlayerState();
             if (state === YT.PlayerState.PLAYING) {
                 ytPlayer.pauseVideo();
             } else {
-                ytPlayer.playVideo();
+                playCurrentTrack();
             }
         });
 
         nextBtn.addEventListener('click', () => {
             if (!isReady) return;
-            hasInteristed = true;
             queueIndex = (queueIndex + 1) % shuffledQueue.length;
             playCurrentTrack();
         });
 
         prevBtn.addEventListener('click', () => {
             if (!isReady) return;
-            hasInteristed = true;
             queueIndex = (queueIndex - 1 + shuffledQueue.length) % shuffledQueue.length;
             playCurrentTrack();
         });
