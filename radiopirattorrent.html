@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Мини Радио</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            /* Фоновое изображение */
+            background-image: url('https://yt3.googleusercontent.com/rglUNS75RUUZekmKsC7rR9ZKT3r5IQEU8xNTRcvKa9rCjNP5IO3Atm02dJTib-siOLdB1QXsid0=s900-c-k-c0x00ffffff-no-rj');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #0b0b0b;
+            
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4));
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* VHS Эффект (сканлайны и мерцание) */
+        .vhs-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 20;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 6px 100%;
+            opacity: 0.7;
+        }
+
+        /* Центр сцены для плеера и орбиты */
+        .stage {
+            position: relative;
+            width: 100%;
+            max-width: 360px;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+        }
+
+        .player-card {
+            background: rgba(30, 30, 30, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(-10vh);
+            
+            width: 90%;
+            max-width: 360px;
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            z-index: 10;
+        }
+        .logo {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+        
+        /* Эквалайзер */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 5px;
+            height: 60px;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        .bar {
+            width: 8px;
+            background: #2b748f;
+            box-shadow: 0 0 8px rgba(43, 116, 143, 0.6);
+            border-radius: 4px;
+            height: 10px;
+            transition: height 0.08s ease;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+        button {
+            background: rgba(40, 40, 40, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 18px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        button.main-play {
+            width: 65px;
+            height: 65px;
+            /* Убран смещающий padding, центрирование идет автоматически за счет flex */
+        }
+
+        /* Стили для иконки паузы (минималистичный белый квадратик) */
+        .pause-icon {
+            width: 14px;
+            height: 14px;
+            background-color: #fff;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        /* Орбита соцсетей */
+        .orbit-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            transform: translateY(-10vh);
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .orbit-item {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            margin-top: -22px;
+            margin-left: -22px;
+            background: rgba(20, 25, 30, 0.75);
+            border: 1px solid rgba(43, 116, 143, 0.5);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(43, 116, 143, 0.4);
+            pointer-events: auto;
+            text-decoration: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+            padding: 3px 2px;
+        }
+
+        .orbit-item:hover {
+            border-color: #2b748f;
+            box-shadow: 0 0 18px rgba(43, 116, 143, 0.9);
+        }
+
+        .orbit-item svg {
+            width: 16px;
+            height: 16px;
+            fill: #a2c4d0;
+            flex-shrink: 0;
+        }
+
+        .orbit-item .icon-text {
+            font-size: 6px;
+            font-weight: 300;
+            letter-spacing: -0.2px;
+            color: #a2c4d0;
+            text-transform: lowercase;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            line-height: 1;
+        }
+
+        #youtube-player {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="vhs-overlay"></div>
+
+    <div class="stage">
+        <!-- Плеер -->
+        <div class="player-card" id="playerCard">
+            <div class="logo">Radio Pirattorrent</div>
+
+            <!-- Эквалайзер -->
+            <div class="equalizer" id="equalizer">
+                <div class="bar" style="height: 10px;"></div>
+                <div class="bar" style="height: 10px;"></div>
+                <div class="bar" style="height: 10px;"></div>
+                <div class="bar" style="height: 10px;"></div>
+                <div class="bar" style="height: 10px;"></div>
+            </div>
+
+            <!-- Контейнер для YouTube API -->
+            <div id="youtube-player"></div>
+
+            <div class="controls">
+                <button id="prevBtn" title="Назад">⏮</button>
+                <button id="playBtn" class="main-play" title="Плей/Пауза">▶</button>
+                <button id="nextBtn" title="Вперед">⏭</button>
+            </div>
+        </div>
+
+        <!-- Орбита с иконками соцсетей -->
+        <div class="orbit-container" id="orbitContainer">
+            <!-- Иконки генерируются через JS -->
+        </div>
+    </div>
+
+    <!-- Подключаем официальный скрипт YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <script>
+        // =========================================================================
+        // МЕСТО ДЛЯ ВАШИХ ССЫЛОК НА МУЗЫКУ
+        // =========================================================================
+        const playlist = [
+            "https://youtu.be/uj8hM7efDA4?si=YfOuBCbvE_SEFarB",
+            "https://youtu.be/udbUIyP6wpM?si=C08Eyh8pwtk_JBgB"
+        ];
+        // =========================================================================
+
+        // Данные соцсетей
+        const socialLinks = [
+            {
+                url: "https://youtube.com/@pirattorrents",
+                name: "YouTube",
+                text: "pirattorrent",
+                svg: '<svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+            },
+            {
+                url: "https://www.instagram.com/pirattorrent",
+                name: "Instagram",
+                text: "",
+                svg: '<svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>'
+            },
+            {
+                url: "https://youtube.com/@pirattorrent",
+                name: "YouTube Archive",
+                text: "archive",
+                svg: '<svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+            },
+            {
+                url: "https://t.me/Pirattorrents",
+                name: "Telegram",
+                text: "",
+                svg: '<svg viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.14-.26.26-.534.26l.213-3.05 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/></svg>'
+            },
+            {
+                url: "https://youtube.com/@hckmnd",
+                name: "YouTube 3",
+                text: "hckmnd",
+                svg: '<svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>'
+            },
+            {
+                url: "https://www.tiktok.com/@pirattorrent",
+                name: "TikTok",
+                text: "",
+                svg: '<svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>'
+            }
+        ];
+
+        const orbitContainer = document.getElementById('orbitContainer');
+        const orbitElements = [];
+
+        socialLinks.forEach((item) => {
+            const a = document.createElement('a');
+            a.href = item.url;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.className = "orbit-item";
+            a.title = item.name;
+
+            let htmlContent = item.svg;
+            if (item.text) {
+                htmlContent += `<span class="icon-text">${item.text}</span>`;
+            }
+            a.innerHTML = htmlContent;
+
+            orbitContainer.appendChild(a);
+            orbitElements.push(a);
+        });
+
+        // Анимация вращения с динамическим z-index
+        let angle = 0;
+        function animateOrbit() {
+            angle += 0.0055; 
+            const radiusX = 260; 
+            const radiusY = 134; 
+
+            orbitElements.forEach((el, index) => {
+                const total = orbitElements.length;
+                const currentAngle = angle + (index * ((Math.PI * 2) / total));
+
+                const x = Math.cos(currentAngle) * radiusX;
+                const y = Math.sin(currentAngle) * radiusY;
+
+                const depth = (Math.sin(currentAngle) + 1) / 2; 
+                const scale = 0.75 + (depth * 0.45);
+                const opacity = 0.45 + (depth * 0.55);
+                const zIndex = depth < 0.5 ? 5 : 15;
+
+                el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+                el.style.opacity = opacity;
+                el.style.zIndex = zIndex;
+            });
+
+            requestAnimationFrame(animateOrbit);
+        }
+        requestAnimationFrame(animateOrbit);
+
+        // Логика плеера
+        let ytPlayer = null;
+        let shuffledQueue = [];
+        let queueIndex = 0;
+        let isReady = false;
+        let equalizerInterval = null;
+
+        const playBtn = document.getElementById('playBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const bars = document.querySelectorAll('.equalizer .bar');
+
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            try {
+                const parsedUrl = new URL(url);
+                if (parsedUrl.hostname === 'youtu.be') {
+                    return parsedUrl.pathname.slice(1);
+                }
+                if (parsedUrl.hostname.includes('youtube.com')) {
+                    if (parsedUrl.searchParams.has('v')) {
+                        return parsedUrl.searchParams.get('v');
+                    }
+                    const parts = parsedUrl.pathname.split('/');
+                    const index = parts.indexOf('embed') !== -1 ? parts.indexOf('embed') : parts.indexOf('shorts');
+                    if (index !== -1 && parts[index + 1]) {
+                        return parts[index + 1];
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function generateShuffledQueue() {
+            shuffledQueue = [...Array(playlist.length).keys()];
+            for (let i = shuffledQueue.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledQueue[i], shuffledQueue[j]] = [shuffledQueue[j], shuffledQueue[i]];
+            }
+            queueIndex = 0;
+        }
+
+        function startEqualizer(videoId) {
+            stopEqualizer();
+            let seed = 0;
+            if (videoId) {
+                for (let i = 0; i < videoId.length; i++) {
+                    seed += videoId.charCodeAt(i);
+                }
+            }
+
+            equalizerInterval = setInterval(() => {
+                bars.forEach((bar, index) => {
+                    let randomHeight = 15 + Math.abs(Math.sin(Date.now() / 120 + index + seed)) * 40;
+                    bar.style.height = randomHeight + 'px';
+                });
+            }, 80);
+        }
+
+        function stopEqualizer() {
+            if (equalizerInterval) {
+                clearInterval(equalizerInterval);
+                equalizerInterval = null;
+            }
+            bars.forEach(bar => {
+                bar.style.height = '10px';
+            });
+        }
+
+        function setupMediaSession() {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: 'Online Radio',
+                    artist: 'Pirattorrent Stream',
+                    album: 'Miniradio Broadcast'
+                });
+
+                navigator.mediaSession.setActionHandler('play', () => { if (ytPlayer) ytPlayer.playVideo(); });
+                navigator.mediaSession.setActionHandler('pause', () => { if (ytPlayer) ytPlayer.pauseVideo(); });
+                navigator.mediaSession.setActionHandler('previoustrack', () => { prevBtn.click(); });
+                navigator.mediaSession.setActionHandler('nexttrack', () => { nextBtn.click(); });
+            }
+        }
+
+        function onYouTubeIframeAPIReady() {
+            if (playlist.length === 0) return;
+
+            generateShuffledQueue();
+            const initialVideoId = extractYouTubeId(playlist[shuffledQueue[0]]) || "5qap5aO4i9A";
+
+            ytPlayer = new YT.Player('youtube-player', {
+                height: '0',
+                width: '0',
+                videoId: initialVideoId,
+                playerVars: {
+                    'playsinline': 1,
+                    'controls': 0,
+                    'autoplay': 1
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            isReady = true;
+            setupMediaSession();
+            playCurrentTrack();
+        }
+
+        function playCurrentTrack() {
+            if (!isReady || playlist.length === 0) return;
+            const actualIndex = shuffledQueue[queueIndex];
+            const videoId = extractYouTubeId(playlist[actualIndex]);
+            if (videoId) {
+                ytPlayer.loadVideoById(videoId);
+                ytPlayer.playVideo();
+            }
+        }
+
+        function onPlayerStateChange(event) {
+            const actualIndex = shuffledQueue[queueIndex];
+            const currentVideoId = extractYouTubeId(playlist[actualIndex]);
+
+            if (event.data === YT.PlayerState.PLAYING) {
+                playBtn.innerHTML = '<span class="pause-icon"></span>';
+                startEqualizer(currentVideoId);
+            } 
+            else if (event.data === YT.PlayerState.PAUSED) {
+                playBtn.innerHTML = '▶';
+                stopEqualizer();
+            }
+            else if (event.data === YT.PlayerState.ENDED) {
+                stopEqualizer();
+                queueIndex++;
+                if (queueIndex >= shuffledQueue.length) {
+                    generateShuffledQueue();
+                }
+                playCurrentTrack();
+            }
+        }
+
+        playBtn.addEventListener('click', () => {
+            if (!isReady) return;
+            const state = ytPlayer.getPlayerState();
+            if (state === YT.PlayerState.PLAYING) {
+                ytPlayer.pauseVideo();
+            } else {
+                ytPlayer.playVideo();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (!isReady) return;
+            queueIndex = (queueIndex + 1) % shuffledQueue.length;
+            playCurrentTrack();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (!isReady) return;
+            queueIndex = (queueIndex - 1 + shuffledQueue.length) % shuffledQueue.length;
+            playCurrentTrack();
+        });
+    </script>
+</body>
+</html>
