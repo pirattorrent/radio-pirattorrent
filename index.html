@@ -177,7 +177,7 @@
             height: 100%;
         }
 
-        /* Слои орбиты для корректного наложения сзади и спереди */
+        /* Слои орбиты */
         .orbit-layer-back {
             position: absolute;
             top: 50%;
@@ -457,15 +457,27 @@
         function setupMediaSession() {
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
-                    title: 'Online Radio',
-                    artist: 'Pirattorrent Stream',
-                    album: 'Miniradio Broadcast'
+                    title: 'Live Stream',
+                    artist: 'Radio Pirattorrent',
+                    album: 'Online Broadcast'
                 });
 
-                navigator.mediaSession.setActionHandler('play', () => { if (ytPlayer) ytPlayer.playVideo(); });
-                navigator.mediaSession.setActionHandler('pause', () => { if (ytPlayer) ytPlayer.pauseVideo(); });
-                navigator.mediaSession.setActionHandler('previoustrack', () => { prevBtn.click(); });
-                navigator.mediaSession.setActionHandler('nexttrack', () => { nextBtn.click(); });
+                navigator.mediaSession.setActionHandler('play', () => {
+                    if (ytPlayer) ytPlayer.playVideo();
+                });
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    if (ytPlayer) ytPlayer.pauseVideo();
+                });
+                navigator.mediaSession.setActionHandler('previoustrack', () => {
+                    if (!isReady) return;
+                    queueIndex = (queueIndex - 1 + shuffledQueue.length) % shuffledQueue.length;
+                    playCurrentTrack();
+                });
+                navigator.mediaSession.setActionHandler('nexttrack', () => {
+                    if (!isReady) return;
+                    queueIndex = (queueIndex + 1) % shuffledQueue.length;
+                    playCurrentTrack();
+                });
             }
         }
 
@@ -519,11 +531,15 @@
             const actualIndex = shuffledQueue[queueIndex];
             const currentVideoId = extractYouTubeId(playlist[actualIndex]);
 
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = (event.data === YT.PlayerState.PLAYING) ? "playing" : "paused";
+            }
+
             if (event.data === YT.PlayerState.PLAYING) {
                 playBtn.innerHTML = '<span class="pause-icon"></span>';
                 startEqualizer(currentVideoId);
             } 
-            else if (event.data === YT.PlayerState.PAUSED) {
+            else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.CUED) {
                 playBtn.innerHTML = '▶';
                 stopEqualizer();
             }
@@ -537,11 +553,20 @@
             }
         }
 
+        // Исправленный мгновенный запуск по нажатию на Play
         playBtn.addEventListener('click', () => {
             if (!isReady) return;
             const state = ytPlayer.getPlayerState();
+            
             if (state === YT.PlayerState.PLAYING) {
                 ytPlayer.pauseVideo();
+            } else if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED || state === -1) {
+                // Если трек на паузе или только инициализирован — запускаем текущий или возобновляем
+                if (state === -1 || !ytPlayer.getVideoData || !ytPlayer.getVideoData().video_id) {
+                    playCurrentTrack();
+                } else {
+                    ytPlayer.playVideo();
+                }
             } else {
                 playCurrentTrack();
             }
