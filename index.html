@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>·radio·pirattorrent</title>
+    <title>radio·pirattorrent</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            touch-action: manipulation;
         }
         body {
             background-image: url('https://yt3.googleusercontent.com/rglUNS75RUUZekmKsC7rR9ZKT3r5IQEU8xNTRcvKa9rCjNP5IO3Atm02dJTib-siOLdB1QXsid0=s900-c-k-c0x00ffffff-no-rj');
@@ -25,6 +26,7 @@
             height: 100vh;
             overflow: hidden;
             position: relative;
+            perspective: 1000px;
         }
 
         body::before {
@@ -34,6 +36,16 @@
             top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4));
             z-index: 1;
+            pointer-events: none;
+        }
+
+        #fx-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 4;
             pointer-events: none;
         }
 
@@ -57,7 +69,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 5;
+            z-index: 10;
+            pointer-events: none;
         }
 
         .player-wrapper {
@@ -68,6 +81,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            pointer-events: none;
         }
 
         .player-card {
@@ -86,6 +100,7 @@
             text-align: center;
             z-index: 10;
             position: relative;
+            pointer-events: auto;
         }
         
         .logo {
@@ -141,6 +156,7 @@
             justify-content: center;
             cursor: pointer;
             transition: background 0.2s, transform 0.1s;
+            pointer-events: auto;
         }
         button:active {
             transform: scale(0.95);
@@ -158,7 +174,6 @@
             display: inline-block;
         }
 
-        /* YouTube плеер под карточкой */
         #youtube-player-container {
             position: absolute;
             top: 0;
@@ -169,7 +184,7 @@
             overflow: hidden;
             z-index: 2;
             opacity: 0.15;
-            pointer-events: auto;
+            pointer-events: none;
         }
 
         #youtube-player {
@@ -177,7 +192,173 @@
             height: 100%;
         }
 
-        /* Слои орбиты */
+        /* Аудиокассета */
+        .cassette-container {
+            position: fixed;
+            top: 35px;
+            left: 35px;
+            width: 130px;
+            height: 82px;
+            z-index: 25;
+            cursor: pointer;
+            user-select: none;
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(43, 116, 143, 0.3);
+            transform-origin: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: auto;
+        }
+        .cassette-container:hover {
+            border-color: rgba(43, 116, 143, 0.6);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(43, 116, 143, 0.5);
+        }
+        .cassette-container.chewing {
+            border-color: #ff4a4a;
+            box-shadow: 0 0 25px rgba(255, 74, 74, 0.5);
+        }
+
+        .cassette-body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #181818, #222);
+            border-radius: 8px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cassette-label {
+            position: absolute;
+            top: 4px;
+            width: 86%;
+            height: 38px;
+            background: #2b748f;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        .cassette-window {
+            position: absolute;
+            bottom: 6px;
+            width: 70px;
+            height: 22px;
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #444;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 4px;
+        }
+
+        .cassette-reel {
+            width: 14px;
+            height: 14px;
+            border: 2px dashed #aaa;
+            border-radius: 50%;
+            background: #111;
+            transform-origin: center;
+        }
+
+        /* Виниловая пластинка */
+        .vinyl-container {
+            position: fixed;
+            bottom: 95px;
+            right: 30px;
+            width: 140px;
+            height: 140px;
+            z-index: 25;
+            cursor: grab;
+            user-select: none;
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            padding: 6px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(43, 116, 143, 0.3);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            transform-origin: center;
+            pointer-events: auto;
+        }
+        .vinyl-container:hover {
+            border-color: rgba(43, 116, 143, 0.6);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 25px rgba(43, 116, 143, 0.5);
+        }
+        .vinyl-container:active {
+            cursor: grabbing;
+        }
+
+        .vinyl {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: repeating-radial-gradient(
+                circle,
+                #161616,
+                #161616 3px,
+                #262626 4px,
+                #161616 5px
+            );
+            border: 2px solid #222;
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.15);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vinyl::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.2) 100%);
+            pointer-events: none;
+        }
+
+        .vinyl-label {
+            width: 50px;
+            height: 50px;
+            background: #2b748f;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .vinyl-hole {
+            width: 10px;
+            height: 10px;
+            background: #0b0b0b;
+            border-radius: 50%;
+        }
+
+        /* Орбита ссылок */
         .orbit-layer-back {
             position: absolute;
             top: 50%;
@@ -249,10 +430,20 @@
 <body>
 
     <div class="vhs-overlay"></div>
+    <canvas id="fx-canvas"></canvas>
+
+    <div class="cassette-container" id="cassetteContainer" title="Зажмите, чтобы зажевать пленку (реверб)">
+        <div class="cassette-body">
+            <div class="cassette-label">Pirattorrent</div>
+            <div class="cassette-window">
+                <div class="cassette-reel" id="reelLeft"></div>
+                <div class="cassette-reel" id="reelRight"></div>
+            </div>
+        </div>
+    </div>
 
     <div class="stage">
         <div class="player-wrapper">
-            <!-- Слой орбиты сзади плеера -->
             <div class="orbit-layer-back" id="orbitBack"></div>
 
             <div class="player-card" id="playerCard">
@@ -277,8 +468,15 @@
                 </div>
             </div>
 
-            <!-- Слой орбиты спереди плеера -->
             <div class="orbit-layer-front" id="orbitFront"></div>
+        </div>
+    </div>
+
+    <div class="vinyl-container" id="vinylContainer" title="Поскретчите пластинку!">
+        <div class="vinyl" id="vinylElement">
+            <div class="vinyl-label">
+                <div class="vinyl-hole"></div>
+            </div>
         </div>
     </div>
 
@@ -350,15 +548,18 @@
                 htmlContent += `<span class="icon-text">${item.text}</span>`;
             }
             a.innerHTML = htmlContent;
-
             orbitElements.push(a);
         });
 
         let angle = 0;
+        const orbitIconCenters = [];
+
         function animateOrbit() {
             angle += 0.0055; 
             const radiusX = 260; 
             const radiusY = 134; 
+
+            orbitIconCenters.length = 0;
 
             orbitElements.forEach((el, index) => {
                 const total = orbitElements.length;
@@ -375,19 +576,701 @@
                 el.style.opacity = opacity;
 
                 if (depth < 0.5) {
-                    if (el.parentNode !== orbitBack) {
-                        orbitBack.appendChild(el);
-                    }
+                    if (el.parentNode !== orbitBack) orbitBack.appendChild(el);
                 } else {
-                    if (el.parentNode !== orbitFront) {
-                        orbitFront.appendChild(el);
-                    }
+                    if (el.parentNode !== orbitFront) orbitFront.appendChild(el);
                 }
+
+                const rect = el.getBoundingClientRect();
+                orbitIconCenters.push({
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                });
             });
 
             requestAnimationFrame(animateOrbit);
         }
         requestAnimationFrame(animateOrbit);
+
+        let audioCtx = null;
+
+        function initAudioCtx() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playScratchSound(speed) {
+            initAudioCtx();
+            if (!audioCtx) return;
+
+            const bufferSize = audioCtx.sampleRate * 0.06; 
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            let b0 = 0, b1 = 0, b2 = 0;
+
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                data[i] = (b0 + b1 + b2) * 0.5;
+            }
+
+            const noiseSource = audioCtx.createBufferSource();
+            noiseSource.buffer = buffer;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(Math.min(12000, Math.max(1500, Math.abs(speed) * 300)), audioCtx.currentTime);
+            filter.Q.value = 6.0;
+
+            const gainNode = audioCtx.createGain();
+            const intensity = Math.min(4.0, Math.abs(speed) / 2.0);
+            gainNode.gain.setValueAtTime(intensity * 2.5, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
+
+            noiseSource.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            noiseSource.start();
+        }
+
+        let spinAngle = 0;         
+        let scratchOffset = 0;     
+        let isScratching = false;
+        let startX = 0;
+        let lastTime = 0;
+        let ambientRotationSpeed = 0.6; 
+        let reelRotation = 0;
+
+        function updateAnimations() {
+            if (!isScratching) {
+                spinAngle += ambientRotationSpeed; 
+            }
+            
+            let totalRotation = spinAngle + scratchOffset;
+            let breathingScale = 1 + Math.sin(spinAngle * 0.05) * 0.012;
+            
+            vinylElement.style.transform = `rotate(-15deg) rotate(${totalRotation}deg) scale(${breathingScale})`;
+
+            reelRotation += 1.5;
+            const reelLeft = document.getElementById('reelLeft');
+            const reelRight = document.getElementById('reelRight');
+            if (reelLeft && reelRight) {
+                reelLeft.style.transform = `rotate(${reelRotation}deg)`;
+                reelRight.style.transform = `rotate(${reelRotation}deg)`;
+            }
+
+            const cassetteContainer = document.getElementById('cassetteContainer');
+            if (cassetteContainer) {
+                let cassettePulse = 1 + Math.sin(Date.now() / 400) * 0.04;
+                cassetteContainer.style.transform = `rotate(-10deg) scale(${cassettePulse})`;
+            }
+
+            requestAnimationFrame(updateAnimations);
+        }
+        requestAnimationFrame(updateAnimations);
+
+        function startScratch(clientX) {
+            initAudioCtx();
+            isScratching = true;
+            startX = clientX;
+        }
+
+        function moveScratch(clientX) {
+            if (!isScratching) return;
+            const deltaX = clientX - startX;
+            startX = clientX;
+            
+            scratchOffset += deltaX * 22.0;
+
+            const now = Date.now();
+            if (now - lastTime > 2 && Math.abs(deltaX) > 0.2) { 
+                playScratchSound(deltaX);
+                lastTime = now;
+            }
+        }
+
+        function endScratch() {
+            isScratching = false;
+        }
+
+        const vinylContainer = document.getElementById('vinylContainer');
+        const vinylElement = document.getElementById('vinylElement');
+
+        vinylContainer.addEventListener('mousedown', (e) => startScratch(e.clientX));
+        window.addEventListener('mousemove', (e) => moveScratch(e.clientX));
+        window.addEventListener('mouseup', endScratch);
+
+        vinylContainer.addEventListener('touchstart', (e) => {
+            if(e.touches.length > 0) startScratch(e.touches[0].clientX);
+        }, {passive: true});
+        window.addEventListener('touchmove', (e) => {
+            if(e.touches.length > 0) moveScratch(e.touches[0].clientX);
+        }, {passive: true});
+        window.addEventListener('touchend', endScratch);
+
+
+        // --- ЛОГИКА КОМЕТЫ ---
+        const canvas = document.getElementById('fx-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let cometState = {
+            active: false,
+            progress: 0,
+            speed: 0.00045, 
+            shimmer: 0,
+            p0: {x: 0, y: 0},
+            p1: {x: 0, y: 0},
+            p2: {x: 0, y: 0}
+        };
+
+        let cometParticles = []; 
+        let tailMistParticles = []; 
+        let fragments = [];      
+        let cometTimer = 0;
+        let isExploded = false;
+
+        function resetComet() {
+            cometState.active = true;
+            isExploded = false;
+            cometState.progress = 0;
+            cometParticles = [];
+            tailMistParticles = [];
+
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            const side = Math.floor(Math.random() * 4);
+            let startX, startY, endX, endY;
+
+        switch(side) {
+                case 0: 
+                    startX = -150;
+                    startY = Math.random() * h;
+                    endX = w + 150;
+                    endY = Math.random() * h;
+                    break;
+                case 1: 
+                    startX = w + 150;
+                    startY = Math.random() * h;
+                    endX = -150;
+                    endY = Math.random() * h;
+                    break;
+                case 2: 
+                    startX = Math.random() * w;
+                    startY = -150;
+                    endX = Math.random() * w;
+                    endY = h + 150;
+                    break;
+                case 3: 
+                    startX = Math.random() * w;
+                    startY = h + 150;
+                    endX = Math.random() * w;
+                    endY = -150;
+                    break;
+            }
+
+            cometState.p0 = { x: startX, y: startY };
+            cometState.p1 = { 
+                x: (w / 2) + (Math.random() - 0.5) * (w * 0.4), 
+                y: (h / 2) + (Math.random() - 0.5) * (h * 0.4) 
+            };
+            cometState.p2 = { x: endX, y: endY };
+        }
+
+        function getBezierPoint(t, p0, p1, p2) {
+            const u = 1 - t;
+            const tt = t * t;
+            const uu = u * u;
+            let x = uu * p0.x + 2 * u * t * p1.x + tt * p2.x;
+            let y = uu * p0.y + 2 * u * t * p1.y + tt * p2.y;
+            return { x, y };
+        }
+
+        function getBezierDerivative(t, p0, p1, p2) {
+            const u = 1 - t;
+            let dx = 2 * u * (p1.x - p0.x) + 2 * t * (p2.x - p1.x);
+            let dy = 2 * u * (p1.y - p0.y) + 2 * t * (p2.y - p1.y);
+            return { dx, dy };
+        }
+
+        function generateLightningPoints(startX, startY, endX, endY, segments = 5, jitter = 5) {
+            let points = [{x: startX, y: startY}];
+            for (let i = 1; i < segments; i++) {
+                let ratio = i / segments;
+                let base_x = startX + (endX - startX) * ratio;
+                let base_y = startY + (endY - startY) * ratio;
+                
+                let perpX = -(endY - startY);
+                let perpY = (endX - startX);
+                let len = Math.sqrt(perpX * perpX + perpY * perpY);
+                if (len > 0) { perpX /= len; perpY /= len; }
+                
+                let offset = (Math.random() - 0.5) * jitter * (1.0 - ratio * 0.5);
+                points.push({
+                    x: base_x + perpX * offset,
+                    y: base_y + perpY * offset
+                });
+            }
+            points.push({x: endX, y: endY});
+            return points;
+        }
+
+        function triggerExplosion(x, y) {
+            isExploded = true;
+            // Звук баса убран по запросу
+
+            fragments = [];
+            const count = 70;
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1.0 + Math.random() * 6.5;
+                const sizeType = Math.random();
+                let size = 1.0 + Math.random() * 2.0;
+                if (sizeType > 0.75) size = 3.2 + Math.random() * 2.8; 
+
+                fragments.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 0.4,
+                    size: size,
+                    alpha: 1.0,
+                    decay: 0.0035 + Math.random() * 0.007,
+                    twinkleSpeed: 0.15 + Math.random() * 0.35,
+                    twinklePhase: Math.random() * Math.PI * 2,
+                    rayAngle: Math.random() * Math.PI * 2,
+                    rayLengthFactor: 1.5 + Math.random() * 2.5
+                });
+            }
+
+            cometState.active = false;
+        }
+
+        function checkCometHit(clientX, clientY) {
+            if (!cometState.active || isExploded) return;
+            const dx = clientX - cometState.x;
+            const dy = clientY - cometState.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            const scaleFactor = 0.5 + Math.pow(cometState.progress, 2.2) * 8.0;
+            if (dist < 60 * scaleFactor) {
+                triggerExplosion(cometState.x, cometState.y);
+            }
+        }
+
+        window.addEventListener('click', (e) => checkCometHit(e.clientX, e.clientY));
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                checkCometHit(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, {passive: true});
+
+        function renderFX() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!cometState.active && !isExploded) {
+                if (Date.now() > cometTimer) {
+                    resetComet();
+                }
+            }
+
+            if (cometState.active) {
+                cometState.progress += cometState.speed;
+                
+                if (cometState.progress >= 1.2) {
+                    cometState.active = false;
+                    cometTimer = Date.now() + 1000; 
+                } else {
+                    const progressCurve = Math.pow(cometState.progress, 2.2);
+                    const scaleFactor = 0.5 + progressCurve * 8.0; 
+
+                    const currentPos = getBezierPoint(Math.min(1.0, cometState.progress), cometState.p0, cometState.p1, cometState.p2);
+                    cometState.x = currentPos.x;
+                    cometState.y = currentPos.y;
+
+                    for (let iconCenter of orbitIconCenters) {
+                        const icDx = cometState.x - iconCenter.x;
+                        const icDy = cometState.y - iconCenter.y;
+                        const icDist = Math.sqrt(icDx * icDx + icDy * icDy);
+                        if (icDist < 25) {
+                            triggerExplosion(cometState.x, cometState.y);
+                            break;
+                        }
+                    }
+
+                    if (!cometState.active) {
+                        requestAnimationFrame(renderFX);
+                        return;
+                    }
+
+                    cometState.shimmer += 0.08;
+
+                    const deriv = getBezierDerivative(Math.min(1.0, cometState.progress), cometState.p0, cometState.p1, cometState.p2);
+                    const tailAngle = Math.atan2(-deriv.dy, -deriv.dx);
+
+                    const baseTailLength = 120;
+                    const dynamicTailLength = Math.max(15, baseTailLength - (scaleFactor * 10));
+                    
+                    const tailEndX = cometState.x + Math.cos(tailAngle) * dynamicTailLength;
+                    const tailEndY = cometState.y + Math.sin(tailAngle) * dynamicTailLength;
+
+                    const grad = ctx.createLinearGradient(cometState.x, cometState.y, tailEndX, tailEndY);
+                    grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+                    grad.addColorStop(0.3, 'rgba(130, 205, 255, 0.6)');
+                    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = Math.max(0.4, 7.0 * scaleFactor * (1.1 - cometState.progress * 0.6));
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(cometState.x, cometState.y);
+                    ctx.lineTo(tailEndX, tailEndY);
+                    ctx.stroke();
+
+                    let eqLevel = 0.5;
+                    let bars = document.querySelectorAll('.equalizer .bar');
+                    if (bars && bars.length > 0) {
+                        let sum = 0;
+                        bars.forEach(b => sum += parseFloat(b.style.height) || 10);
+                        eqLevel = (sum / bars.length - 10) / 40; 
+                    }
+
+                    if (Math.random() > 0.15 && cometState.progress <= 1.0) {
+                        const tRatio = Math.random();
+                        const mistX = cometState.x + (tailEndX - cometState.x) * tRatio + (Math.random() - 0.5) * (6 * scaleFactor * (1 - tRatio));
+                        const mistY = cometState.y + (tailEndY - cometState.y) * tRatio + (Math.random() - 0.5) * (6 * scaleFactor * (1 - tRatio));
+                        
+                        tailMistParticles.push({
+                            x: mistX,
+                            y: mistY,
+                            vx: (Math.random() - 0.5) * 0.2 + Math.cos(tailAngle) * 0.3,
+                            vy: (Math.random() - 0.5) * 0.2 + Math.sin(tailAngle) * 0.3,
+                            size: 0.5 + Math.random() * 2.0, 
+                            alpha: 0.3 + Math.random() * 0.4,
+                            decay: 0.02 + Math.random() * 0.03
+                        });
+                    }
+
+                    tailMistParticles.forEach(p => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.alpha -= p.decay;
+                    });
+                    tailMistParticles = tailMistParticles.filter(p => p.alpha > 0);
+
+                    tailMistParticles.forEach(p => {
+                        ctx.save();
+                        let musicGlow = p.alpha * (0.5 + eqLevel * 0.8);
+                        ctx.fillStyle = `rgba(180, 225, 255, ${musicGlow})`;
+                        ctx.shadowBlur = 6 * eqLevel;
+                        ctx.shadowColor = '#80c0ff';
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size * (0.8 + eqLevel * 0.4), 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    });
+
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+                    ctx.lineWidth = 0.7;
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = '#ffffff';
+                    
+                    const lightningLengthFactor = Math.max(0.4, 0.85 - (cometState.progress * 0.45));
+                    const lEndX = cometState.x + Math.cos(tailAngle) * (dynamicTailLength * lightningLengthFactor);
+                    const lEndY = cometState.y + Math.sin(tailAngle) * (dynamicTailLength * lightningLengthFactor);
+
+                    if (Math.floor(cometState.shimmer * 4) !== Math.floor((cometState.shimmer - 0.08) * 4)) {
+                        cometState.cachedLightning = generateLightningPoints(cometState.x, cometState.y, lEndX, lEndY, 5, 4 * scaleFactor);
+                    }
+                    
+                    if (cometState.cachedLightning && cometState.cachedLightning.length > 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(cometState.cachedLightning[0].x, cometState.cachedLightning[0].y);
+                        for (let l = 1; l < cometState.cachedLightning.length; l++) {
+                            ctx.lineTo(cometState.cachedLightning[l].x, cometState.cachedLightning[l].y);
+                        }
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+
+                    for (let k = 0; k < 2; k++) {
+                        const offsetAngle = tailAngle + Math.PI + (Math.random() - 0.5) * 1.2;
+                        const dist = Math.random() * (15 * scaleFactor);
+                        cometParticles.push({
+                            x: cometState.x + Math.cos(offsetAngle) * dist,
+                            y: cometState.y + Math.sin(offsetAngle) * dist,
+                            vx: (Math.random() - 0.5) * 0.5 + Math.cos(tailAngle) * 0.5,
+                            vy: (Math.random() - 0.5) * 0.5 + Math.sin(tailAngle) * 0.5,
+                            size: 0.4 + Math.random() * 1.4,
+                            alpha: 0.8
+                        });
+                    }
+
+                    cometParticles.forEach(p => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.alpha -= 0.035;
+                    });
+                    cometParticles = cometParticles.filter(p => p.alpha > 0);
+
+                    cometParticles.forEach(p => {
+                        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        });
+
+                    ctx.save();
+                    ctx.translate(cometState.x, cometState.y);
+                    ctx.rotate(tailAngle + Math.PI);
+
+                    const coreGlow = 16 + Math.sin(cometState.shimmer * 2) * 6;
+                    ctx.shadowBlur = coreGlow;
+                    ctx.shadowColor = '#ffffff';
+
+                    const rayCount = 5;
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 + eqLevel * 0.3})`;
+                    ctx.lineWidth = 1.0;
+                    ctx.beginPath();
+
+                    for (let i = 0; i < rayCount; i++) {
+                        const rayAngle = (i * (Math.PI * 2 / rayCount)) + (cometState.shimmer * 0.3);
+                        const rayLen = (3 + (i % 2 === 0 ? eqLevel * 8 : eqLevel * 5)) * scaleFactor;
+                        
+                        if (i % 2 === 0) {
+                            let midX = Math.cos(rayAngle) * (rayLen * 0.5) + (Math.random() - 0.5) * 3;
+                            let midY = Math.sin(rayAngle) * (rayLen * 0.5) + (Math.random() - 0.5) * 3;
+                            let endX = Math.cos(rayAngle) * rayLen;
+                            let endY = Math.sin(rayAngle) * rayLen;
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(midX, midY);
+                            ctx.lineTo(endX, endY);
+                        } else {
+                            const rX = Math.cos(rayAngle) * rayLen;
+                            const rY = Math.sin(rayAngle) * rayLen;
+                            ctx.moveTo(0, 0);
+                            ctx.lineTo(rX, rY);
+                        }
+                    }
+                    ctx.stroke();
+
+                    const smallRayCount = 12;
+                    ctx.strokeStyle = `rgba(200, 235, 255, ${0.5 + eqLevel * 0.5})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    for (let j = 0; j < smallRayCount; j++) {
+                        const sAngle = (j * (Math.PI * 2 / smallRayCount)) - (cometState.shimmer * 0.5);
+                        const sLen = (2 + Math.abs(Math.sin(cometState.shimmer * 3 + j * 1.5)) * (2 + eqLevel * 6)) * scaleFactor;
+                        const sX = Math.cos(sAngle) * sLen;
+                        const sY = Math.sin(sAngle) * sLen;
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(sX, sY);
+                    }
+                    ctx.stroke();
+
+                    // Ограничение деформации при приближении (чтобы комета не вытягивалась слишком сильно)
+                    let stretchDamp = Math.max(0.15, 1.0 / (1.0 + scaleFactor * 0.35));
+                    let stretchX = 1 + (eqLevel * 0.7 + Math.sin(cometState.shimmer * 5) * 0.25) * stretchDamp;
+                    let stretchY = 1 - (eqLevel * 0.3 + Math.cos(cometState.shimmer * 4) * 0.2) * stretchDamp;
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, (6 * scaleFactor) * stretchX, (3.5 * scaleFactor) * stretchY, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Добавление резких разноцветных токов и частиц в ядре под музыку
+                    const coreColors = ['#a855f7', '#eab308', '#ffffff', '#facc15', '#222222', '#84cc16']; // фиолетовый, золотистый, белый, желтый, черный, салаттовый
+                    const currentCount = 9;
+                    ctx.lineWidth = 0.7;
+                    for (let c = 0; c < currentCount; c++) {
+                        let cAngle = cometState.shimmer * 2.5 + c * (Math.PI * 2 / currentCount);
+                        let col = coreColors[c % coreColors.length];
+                        ctx.strokeStyle = col;
+                        ctx.shadowBlur = 5 * eqLevel;
+                        ctx.shadowColor = col;
+                        ctx.beginPath();
+                        let startR = 0.5 * scaleFactor;
+                        let endR = (3.2 + Math.sin(cometState.shimmer * 4 + c) * 1.8 + eqLevel * 3.0) * scaleFactor; // Выходят за границу ядра
+                        let sx = Math.cos(cAngle) * startR;
+                        let sy = Math.sin(cAngle) * startR;
+                        let ex = Math.cos(cAngle + 0.15) * endR;
+                        let ey = Math.sin(cAngle + 0.15) * endR;
+                        ctx.moveTo(sx, sy);
+                        ctx.lineTo(ex, ey);
+                        ctx.stroke();
+                    }
+
+                    // Мелкие космические точки-частицы внутри ядра
+                    for (let p = 0; p < 6; p++) {
+                        let pAngle = cometState.shimmer * 4 + p * 1.1;
+                        let pDist = (Math.sin(cometState.shimmer * 2 + p) * 0.5 + 0.5) * (2.0 * scaleFactor);
+                        let px = Math.cos(pAngle) * pDist;
+                        let py = Math.sin(pAngle) * pDist;
+                        let col = coreColors[p % coreColors.length];
+                        ctx.fillStyle = col;
+                        ctx.shadowBlur = 3 * eqLevel;
+                        ctx.shadowColor = col;
+                        ctx.beginPath();
+                        ctx.arc(px, py, (0.5 + eqLevel * 0.6) * scaleFactor, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 2.2 * scaleFactor, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+            }
+
+            if (fragments.length > 0) {
+                fragments.forEach(f => {
+                    f.x += f.vx;
+                    f.y += f.vy;
+                    f.vy += 0.035; 
+                    f.vx *= 0.98;
+
+                    f.twinklePhase += f.twinkleSpeed;
+                    f.alpha -= f.decay;
+                });
+
+                fragments = fragments.filter(f => f.alpha > 0 && f.y < canvas.height + 30);
+
+                fragments.forEach(f => {
+                    let bottomFade = f.y > canvas.height - 100 ? Math.max(0, (canvas.height - f.y) / 100) : 1.0;
+                    let currentAlpha = Math.max(0, f.alpha * bottomFade);
+                    let twinkle = 0.5 + Math.sin(f.twinklePhase) * 0.5;
+
+                    ctx.save();
+                    ctx.globalAlpha = currentAlpha * twinkle;
+                    ctx.shadowBlur = f.size > 2 ? 12 : 5;
+                    ctx.shadowColor = '#ffffff';
+                    ctx.fillStyle = '#ffffff';
+                    
+                    ctx.beginPath();
+                    ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${currentAlpha * 0.75})`;
+                    ctx.lineWidth = f.size > 2 ? 1.0 : 0.7;
+                    ctx.beginPath();
+                    
+                    const rLen = f.size * f.rayLengthFactor * (0.8 + twinkle * 0.4);
+                    const cos1 = Math.cos(f.rayAngle);
+                    const sin1 = Math.sin(f.rayAngle);
+                    ctx.moveTo(f.x - cos1 * rLen, f.y - sin1 * rLen);
+                    ctx.lineTo(f.x + cos1 * rLen, f.y + sin1 * rLen);
+
+                    const cos2 = Math.cos(f.rayAngle + Math.PI / 2);
+                    const sin2 = Math.sin(f.rayAngle + Math.PI / 2);
+                    ctx.moveTo(f.x - cos2 * rLen, f.y - sin2 * rLen);
+                    ctx.lineTo(f.x + cos2 * rLen, f.y + sin2 * rLen);
+                    
+                    ctx.stroke();
+                    ctx.restore();
+                });
+
+                if (fragments.length === 0 && isExploded) {
+                    isExploded = false;
+                    cometTimer = Date.now() + 1000; 
+                    }
+                   }
+
+            requestAnimationFrame(renderFX);
+        }
+        
+        cometTimer = Date.now() + 1000;
+        requestAnimationFrame(renderFX);
+
+
+        // --- АУДИО И ПЛЕЕР ---
+        const cassetteContainer = document.getElementById('cassetteContainer');
+        let mediaElemSource = null;
+        let lowpassFilter = null;
+        let delayNode = null;
+        let feedbackNode = null;
+        let isChewing = false;
+
+        function setupAudioNodes(iframeEl) {
+            if (audioCtx && mediaElemSource) return;
+            initAudioCtx();
+            try {
+                const iframeDoc = iframeEl.contentDocument || iframeEl.contentWindow.document;
+                const videoEl = iframeDoc.querySelector('video');
+                if (videoEl && audioCtx) {
+                    mediaElemSource = audioCtx.createMediaElementSource(videoEl);
+                    
+                    lowpassFilter = audioCtx.createBiquadFilter();
+                    lowpassFilter.type = 'lowpass';
+                    lowpassFilter.frequency.value = 20000;
+
+                    delayNode = audioCtx.createDelay();
+                    delayNode.delayTime.value = 0.25;
+
+                    feedbackNode = audioCtx.createGain();
+                    feedbackNode.gain.value = 0.4;
+
+                    delayNode.connect(feedbackNode);
+                    feedbackNode.connect(delayNode);
+
+                    mediaElemSource.connect(lowpassFilter);
+                    lowpassFilter.connect(audioCtx.destination);
+                    lowpassFilter.connect(delayNode);
+                    delayNode.connect(audioCtx.destination);
+                }
+            } catch (e) {}
+        }
+
+        function startChewing() {
+            isChewing = true;
+            cassetteContainer.classList.add('chewing');
+            
+            if (ytPlayer && typeof ytPlayer.setPlaybackRate === 'function') {
+                try { ytPlayer.setPlaybackRate(0.5); } catch(err) {}
+            }
+
+            if (audioCtx && lowpassFilter) {
+                lowpassFilter.frequency.setTargetAtTime(450, audioCtx.currentTime, 0.1);
+            }
+        }
+
+        function stopChewing() {
+            if (!isChewing) return;
+            isChewing = false;
+            cassetteContainer.classList.remove('chewing');
+
+            if (ytPlayer && typeof ytPlayer.setPlaybackRate === 'function') {
+                try { ytPlayer.setPlaybackRate(1.0); } catch(err) {}
+            }
+
+            if (audioCtx && lowpassFilter) {
+                lowpassFilter.frequency.setTargetAtTime(20000, audioCtx.currentTime, 0.1);
+            }
+        }
+
+        cassetteContainer.addEventListener('mousedown', startChewing);
+        window.addEventListener('mouseup', stopChewing);
+
+        cassetteContainer.addEventListener('touchstart', (e) => {
+            startChewing();
+        }, {passive: true});
+        window.addEventListener('touchend', stopChewing);
 
         let ytPlayer = null;
         let shuffledQueue = [];
@@ -404,18 +1287,12 @@
             if (!url) return null;
             try {
                 const parsedUrl = new URL(url);
-                if (parsedUrl.hostname === 'youtu.be') {
-                    return parsedUrl.pathname.slice(1);
-                }
+                if (parsedUrl.hostname === 'youtu.be') return parsedUrl.pathname.slice(1);
                 if (parsedUrl.hostname.includes('youtube.com')) {
-                    if (parsedUrl.searchParams.has('v')) {
-                        return parsedUrl.searchParams.get('v');
-                    }
+                    if (parsedUrl.searchParams.has('v')) return parsedUrl.searchParams.get('v');
                     const parts = parsedUrl.pathname.split('/');
                     const index = parts.indexOf('embed') !== -1 ? parts.indexOf('embed') : parts.indexOf('shorts');
-                    if (index !== -1 && parts[index + 1]) {
-                        return parts[index + 1];
-                    }
+                    if (index !== -1 && parts[index + 1]) return parts[index + 1];
                 }
             } catch (e) {}
             return null;
@@ -434,9 +1311,7 @@
             stopEqualizer();
             let seed = 0;
             if (videoId) {
-                for (let i = 0; i < videoId.length; i++) {
-                    seed += videoId.charCodeAt(i);
-                }
+                for (let i = 0; i < videoId.length; i++) seed += videoId.charCodeAt(i);
             }
 
             equalizerInterval = setInterval(() => {
@@ -452,41 +1327,11 @@
                 clearInterval(equalizerInterval);
                 equalizerInterval = null;
             }
-            bars.forEach(bar => {
-                bar.style.height = '10px';
-            });
-        }
-
-        function setupMediaSession() {
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = new MediaMetadata({
-                    title: 'Live Stream',
-                    artist: 'Radio Pirattorrent',
-                    album: 'Online Broadcast'
-                });
-
-                navigator.mediaSession.setActionHandler('play', () => {
-                    if (ytPlayer) ytPlayer.playVideo();
-                });
-                navigator.mediaSession.setActionHandler('pause', () => {
-                    if (ytPlayer) ytPlayer.pauseVideo();
-                });
-                navigator.mediaSession.setActionHandler('previoustrack', () => {
-                    if (!isReady) return;
-                    queueIndex = (queueIndex - 1 + shuffledQueue.length) % shuffledQueue.length;
-                    playCurrentTrack();
-                });
-                navigator.mediaSession.setActionHandler('nexttrack', () => {
-                    if (!isReady) return;
-                    queueIndex = (queueIndex + 1) % shuffledQueue.length;
-                    playCurrentTrack();
-                });
-            }
+            bars.forEach(bar => { bar.style.height = '10px'; });
         }
 
         function onYouTubeIframeAPIReady() {
             if (playlist.length === 0) return;
-
             generateShuffledQueue();
             const initialVideoId = extractYouTubeId(playlist[shuffledQueue[0]]) || "5qap5aO4i9A";
 
@@ -502,16 +1347,19 @@
                     'modestbranding': 1
                 },
                 events: {
-                    'onReady': onPlayerReady,
+                    'onReady': (e) => { 
+                        isReady = true; 
+                        const iframeEl = document.querySelector('#youtube-player-container iframe');
+                        if (iframeEl) setupAudioNodes(iframeEl);
+                    },
                     'onStateChange': onPlayerStateChange,
-                    'onError': onPlayerError
+                    'onError': (e) => {
+                        stopEqualizer();
+                        queueIndex = (queueIndex + 1) % shuffledQueue.length;
+                        playCurrentTrack();
+                    }
                 }
             });
-        }
-
-        function onPlayerReady(event) {
-            isReady = true;
-            setupMediaSession();
         }
 
         function playCurrentTrack() {
@@ -524,19 +1372,9 @@
             }
         }
 
-        function onPlayerError(event) {
-            stopEqualizer();
-            queueIndex = (queueIndex + 1) % shuffledQueue.length;
-            playCurrentTrack();
-        }
-
         function onPlayerStateChange(event) {
             const actualIndex = shuffledQueue[queueIndex];
             const currentVideoId = extractYouTubeId(playlist[actualIndex]);
-
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.playbackState = (event.data === YT.PlayerState.PLAYING) ? "playing" : "paused";
-            }
 
             if (event.data === YT.PlayerState.PLAYING) {
                 playBtn.innerHTML = '<span class="pause-icon"></span>';
@@ -549,26 +1387,20 @@
             else if (event.data === YT.PlayerState.ENDED) {
                 stopEqualizer();
                 queueIndex++;
-                if (queueIndex >= shuffledQueue.length) {
-                    generateShuffledQueue();
-                }
+                if (queueIndex >= shuffledQueue.length) generateShuffledQueue();
                 playCurrentTrack();
             }
         }
 
-        // Кнопка Play как прямой катализатор запуска
         playBtn.addEventListener('click', () => {
+            initAudioCtx();
             if (!isReady) return;
             const state = ytPlayer.getPlayerState();
-            
             if (state === YT.PlayerState.PLAYING) {
                 ytPlayer.pauseVideo();
             } else {
-                if (state === -1 || state === YT.PlayerState.CUED || !ytPlayer.getVideoData || !ytPlayer.getVideoData().video_id) {
-                    playCurrentTrack();
-                } else {
-                    ytPlayer.playVideo();
-                }
+                if (state === -1 || state === YT.PlayerState.CUED) playCurrentTrack();
+                else ytPlayer.playVideo();
             }
         });
 
