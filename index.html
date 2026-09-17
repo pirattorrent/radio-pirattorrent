@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>radio·pirattorrent</title>
+    <title>·radio·pirattorrent</title>
     <style>
         * {
             box-sizing: border-box;
@@ -286,13 +286,12 @@
 
     <script>
         const playlist = [
-            "https://m.youtube.com/watch?v=pPlQiLBChh8&fbclid=PAb21jcAUYdzdwZG9mAmV4dG4DYWVtAjExAHNydGMGYXBwX2lkDzU2NzA2NzM0MzM1MjQyNwABp9kn2EhSYm8fBi7xuOu97duhqjPzHH-xaDnk-nRRVqdbECAP_4sry2nY7rmF_aem_02oiP5zf-FL5VLn3U05r0A",
             "https://youtu.be/uj8hM7efDA4?si=YfOuBCbvE_SEFarB",
             "https://youtu.be/udbUIyP6wpM?si=C08Eyh8pwtk_JBgB",
             "https://youtu.be/TySWfSLzLzk?si=l374eJsD9SjGLRae",
             "https://m.youtube.com/watch?v=vK9f5uZLXGc",
             "https://m.youtube.com/watch?v=PFaBWFb0WR8",
-            "https://youtu.be/zBOiP3P-0zg?si=tDxhjWOsFAdIXvVQ"
+            "https://m.youtube.com/watch?v=uj8hM7efDA4"
         ];
 
         const socialLinks = [
@@ -557,22 +556,19 @@
             }
         }
 
-        // Исправленный мгновенный запуск по нажатию на Play
+        // Кнопка Play как прямой катализатор запуска
         playBtn.addEventListener('click', () => {
             if (!isReady) return;
             const state = ytPlayer.getPlayerState();
             
             if (state === YT.PlayerState.PLAYING) {
                 ytPlayer.pauseVideo();
-            } else if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED || state === -1) {
-                // Если трек на паузе или только инициализирован — запускаем текущий или возобновляем
-                if (state === -1 || !ytPlayer.getVideoData || !ytPlayer.getVideoData().video_id) {
+            } else {
+                if (state === -1 || state === YT.PlayerState.CUED || !ytPlayer.getVideoData || !ytPlayer.getVideoData().video_id) {
                     playCurrentTrack();
                 } else {
                     ytPlayer.playVideo();
                 }
-            } else {
-                playCurrentTrack();
             }
         });
 
