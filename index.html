@@ -12,7 +12,6 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
         body {
-            /* Фоновое изображение */
             background-image: url('https://yt3.googleusercontent.com/rglUNS75RUUZekmKsC7rR9ZKT3r5IQEU8xNTRcvKa9rCjNP5IO3Atm02dJTib-siOLdB1QXsid0=s900-c-k-c0x00ffffff-no-rj');
             background-size: cover;
             background-position: center;
@@ -38,18 +37,16 @@
             pointer-events: none;
         }
 
-        /* VHS Эффект (сканлайны и мерцание) */
         .vhs-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
-            z-index: 20;
+            z-index: 30;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             background-size: 100% 3px, 6px 100%;
             opacity: 0.7;
         }
 
-        /* Центр сцены для плеера и орбиты */
         .stage {
             position: relative;
             width: 100%;
@@ -61,15 +58,24 @@
             z-index: 5;
         }
 
+        /* Общий контейнер, внутри которого живет и плеер, и разделенная орбита */
+        .player-wrapper {
+            position: relative;
+            width: 90%;
+            max-width: 360px;
+            transform: translateY(-10vh);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .player-card {
             background: rgba(30, 30, 30, 0.5);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            transform: translateY(-10vh);
             
-            width: 90%;
-            max-width: 360px;
+            width: 100%;
             padding: 24px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -91,7 +97,6 @@
             z-index: 12;
         }
         
-        /* Эквалайзер */
         .equalizer {
             display: flex;
             align-items: flex-end;
@@ -143,7 +148,6 @@
             height: 65px;
         }
 
-        /* Стили для иконки паузы (минималистичный белый квадратик) */
         .pause-icon {
             width: 14px;
             height: 14px;
@@ -152,7 +156,6 @@
             display: inline-block;
         }
 
-        /* Обертка для YouTube плеера, которая совпадает по размерам с карточкой и стоит под ней */
         #youtube-player-container {
             position: absolute;
             top: 0;
@@ -161,9 +164,9 @@
             height: 100%;
             border-radius: 20px;
             overflow: hidden;
-            z-index: 2; /* Под интерфейсом карточки (z-index 10), но видимый */
-            opacity: 0.15; /* Делаем его полупрозрачным, чтобы проступал сквозь дизайн, но оставался видимым для Instagram */
-            pointer-events: auto; /* Позволяет ловить клики */
+            z-index: 2;
+            opacity: 0.15;
+            pointer-events: auto;
         }
 
         #youtube-player {
@@ -171,16 +174,25 @@
             height: 100%;
         }
 
-        /* Орбита соцсетей */
-        .orbit-container {
+        /* Слои орбиты: задний уходит под карточку, передний — поверх */
+        .orbit-layer-back {
             position: absolute;
             top: 50%;
             left: 50%;
             width: 0;
             height: 0;
-            transform: translateY(-10vh);
             pointer-events: none;
-            z-index: 15;
+            z-index: 1; /* Под карточкой (z-index: 10) */
+        }
+
+        .orbit-layer-front {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            z-index: 20; /* Поверх карточки (z-index: 10) */
         }
 
         .orbit-item {
@@ -189,7 +201,7 @@
             height: 44px;
             margin-top: -22px;
             margin-left: -22px;
-            background: rgba(20, 25, 30, 0.75);
+            background: rgba(20, 25, 30, 0.85);
             border: 1px solid rgba(43, 116, 143, 0.5);
             border-radius: 50%;
             display: flex;
@@ -236,52 +248,47 @@
     <div class="vhs-overlay"></div>
 
     <div class="stage">
-        <!-- Плеер -->
-        <div class="player-card" id="playerCard">
-            <!-- Видимый плеер YouTube прямо внутри карточки под размером -->
-            <div id="youtube-player-container">
-                <div id="youtube-player"></div>
+        <div class="player-wrapper">
+            <!-- Задний слой орбиты (идет под плеер) -->
+            <div class="orbit-layer-back" id="orbitBack"></div>
+
+            <!-- Сама карточка плеера -->
+            <div class="player-card" id="playerCard">
+                <div id="youtube-player-container">
+                    <div id="youtube-player"></div>
+                </div>
+
+                <div class="logo">Radio Pirattorrent</div>
+
+                <div class="equalizer" id="equalizer">
+                    <div class="bar" style="height: 10px;"></div>
+                    <div class="bar" style="height: 10px;"></div>
+                    <div class="bar" style="height: 10px;"></div>
+                    <div class="bar" style="height: 10px;"></div>
+                    <div class="bar" style="height: 10px;"></div>
+                </div>
+
+                <div class="controls">
+                    <button id="prevBtn" title="Назад">⏮</button>
+                    <button id="playBtn" class="main-play" title="Плей/Пауза">▶</button>
+                    <button id="nextBtn" title="Вперед">⏭</button>
+                </div>
             </div>
 
-            <div class="logo">Radio Pirattorrent</div>
-
-            <!-- Эквалайзер -->
-            <div class="equalizer" id="equalizer">
-                <div class="bar" style="height: 10px;"></div>
-                <div class="bar" style="height: 10px;"></div>
-                <div class="bar" style="height: 10px;"></div>
-                <div class="bar" style="height: 10px;"></div>
-                <div class="bar" style="height: 10px;"></div>
-            </div>
-
-            <div class="controls">
-                <button id="prevBtn" title="Назад">⏮</button>
-                <button id="playBtn" class="main-play" title="Плей/Пауза">▶</button>
-                <button id="nextBtn" title="Вперед">⏭</button>
-            </div>
-        </div>
-
-        <!-- Орбита с иконками соцсетей -->
-        <div class="orbit-container" id="orbitContainer">
-            <!-- Иконки генерируются через JS -->
+            <!-- Передний слой орбиты (идет поверх плеера) -->
+            <div class="orbit-layer-front" id="orbitFront"></div>
         </div>
     </div>
 
-    <!-- Подключаем официальный скрипт YouTube IFrame API -->
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
-        // =========================================================================
-        // МЕСТО ДЛЯ ВАШИХ ССЫЛОК НА МУЗЫКУ
-        // =========================================================================
         const playlist = [
             "https://youtu.be/uj8hM7efDA4?si=YfOuBCbvE_SEFarB",
             "https://youtu.be/udbUIyP6wpM?si=C08Eyh8pwtk_JBgB",
             "https://youtu.be/TySWfSLzLzk?si=l374eJsD9SjGLRae"
         ];
-        // =========================================================================
 
-        // Данные соцсетей
         const socialLinks = [
             {
                 url: "https://youtube.com/@pirattorrents",
@@ -321,7 +328,8 @@
             }
         ];
 
-        const orbitContainer = document.getElementById('orbitContainer');
+        const orbitBack = document.getElementById('orbitBack');
+        const orbitFront = document.getElementById('orbitFront');
         const orbitElements = [];
 
         socialLinks.forEach((item) => {
@@ -338,11 +346,10 @@
             }
             a.innerHTML = htmlContent;
 
-            orbitContainer.appendChild(a);
             orbitElements.push(a);
         });
 
-        // Анимация вращения с динамическим z-index
+        // Анимация вращения с физическим перемещением между слоями DOM
         let angle = 0;
         function animateOrbit() {
             angle += 0.0055; 
@@ -359,11 +366,20 @@
                 const depth = (Math.sin(currentAngle) + 1) / 2; 
                 const scale = 0.75 + (depth * 0.45);
                 const opacity = 0.45 + (depth * 0.55);
-                const zIndex = depth < 0.5 ? 5 : 15;
 
                 el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
                 el.style.opacity = opacity;
-                el.style.zIndex = zIndex;
+
+                // Перекидываем иконку в правильный контейнер в зависимости от полусферы
+                if (depth < 0.5) {
+                    if (el.parentNode !== orbitBack) {
+                        orbitBack.appendChild(el);
+                    }
+                } else {
+                    if (el.parentNode !== orbitFront) {
+                        orbitFront.appendChild(el);
+                    }
+                }
             });
 
             requestAnimationFrame(animateOrbit);
@@ -504,7 +520,7 @@
             const actualIndex = shuffledQueue[queueIndex];
             const currentVideoId = extractYouTubeId(playlist[actualIndex]);
 
-            if (event.data === YT.PlayerState.PLAYING) {
+               if (event.data === YT.PlayerState.PLAYING) {
                 playBtn.innerHTML = '<span class="pause-icon"></span>';
                 startEqualizer(currentVideoId);
             } 
@@ -546,3 +562,5 @@
     </script>
 </body>
 </html>
+
+                
