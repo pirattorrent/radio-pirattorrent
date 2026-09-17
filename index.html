@@ -173,7 +173,7 @@
             border-radius: 2px;
             display: inline-block;
         }
-
+        
         #youtube-player-container {
             position: absolute;
             top: 0;
@@ -182,9 +182,9 @@
             height: 100%;
             border-radius: 20px;
             overflow: hidden;
-            z-index: 2;
+            z-index: 8;           /* Ставим выше подложки карточки, но ниже кнопок */
             opacity: 0.15;
-            pointer-events: none;
+            pointer-events: auto; /* Включаем реакцию на касания */
         }
 
         #youtube-player {
