@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>radio·pirattorrent</title>
+    <title>·radio·pirattorrent</title>
     <style>
         * {
             box-sizing: border-box;
@@ -49,39 +49,6 @@
             opacity: 0.7;
         }
 
-        /* Подсказка для Instagram в правом верхнем углу */
-        .instagram-hint {
-            display: none; /* Скрыта по умолчанию */
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 25;
-            background: rgba(20, 25, 30, 0.8);
-            border: 1px solid rgba(43, 116, 143, 0.6);
-            padding: 8px 12px;
-            border-radius: 12px;
-            box-shadow: 0 0 14px rgba(43, 116, 143, 0.5);
-            text-align: right;
-            animation: fadeInHint 0.5s ease-out;
-            max-width: 200px;
-        }
-
-        .instagram-hint span {
-            display: block;
-            font-size: 9px;
-            font-weight: 300;
-            letter-spacing: 0.2px;
-            color: #a2c4d0;
-            text-transform: lowercase;
-            line-height: 1.3;
-            text-shadow: 0 0 6px rgba(162, 196, 208, 0.4);
-        }
-
-        @keyframes fadeInHint {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         /* Центр сцены для плеера и орбиты */
         .stage {
             position: relative;
@@ -111,13 +78,17 @@
             align-items: center;
             text-align: center;
             z-index: 10;
+            position: relative;
         }
+        
         .logo {
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: #aaa;
             margin-bottom: 20px;
+            position: relative;
+            z-index: 12;
         }
         
         /* Эквалайзер */
@@ -129,6 +100,8 @@
             height: 60px;
             margin-bottom: 30px;
             width: 100%;
+            position: relative;
+            z-index: 12;
         }
         .bar {
             width: 8px;
@@ -145,6 +118,8 @@
             justify-content: center;
             gap: 20px;
             width: 100%;
+            position: relative;
+            z-index: 12;
         }
         button {
             background: rgba(40, 40, 40, 0.7);
@@ -175,6 +150,25 @@
             background-color: #fff;
             border-radius: 2px;
             display: inline-block;
+        }
+
+        /* Обертка для YouTube плеера, которая совпадает по размерам с карточкой и стоит под ней */
+        #youtube-player-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            z-index: 2; /* Под интерфейсом карточки (z-index 10), но видимый */
+            opacity: 0.15; /* Делаем его полупрозрачным, чтобы проступал сквозь дизайн, но оставался видимым для Instagram */
+            pointer-events: auto; /* Позволяет ловить клики */
+        }
+
+        #youtube-player {
+            width: 100%;
+            height: 100%;
         }
 
         /* Орбита соцсетей */
@@ -235,24 +229,20 @@
             max-width: 100%;
             line-height: 1;
         }
-
-        #youtube-player {
-            display: none;
-        }
     </style>
 </head>
 <body>
 
     <div class="vhs-overlay"></div>
 
-    <!-- Минималистичная подсказка для Instagram в правом верхнем углу -->
-    <div class="instagram-hint" id="instaHint">
-        <span>откройте в браузере<br>для стабильного звука</span>
-    </div>
-
     <div class="stage">
         <!-- Плеер -->
         <div class="player-card" id="playerCard">
+            <!-- Видимый плеер YouTube прямо внутри карточки под размером -->
+            <div id="youtube-player-container">
+                <div id="youtube-player"></div>
+            </div>
+
             <div class="logo">Radio Pirattorrent</div>
 
             <!-- Эквалайзер -->
@@ -263,9 +253,6 @@
                 <div class="bar" style="height: 10px;"></div>
                 <div class="bar" style="height: 10px;"></div>
             </div>
-
-            <!-- Контейнер для YouTube API -->
-            <div id="youtube-player"></div>
 
             <div class="controls">
                 <button id="prevBtn" title="Назад">⏮</button>
@@ -284,11 +271,6 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
-        // Показываем подсказку в правом верхнем углу, если открыто в Инстаграме
-        if (/Instagram/i.test(navigator.userAgent)) {
-            document.getElementById('instaHint').style.display = 'block';
-        }
-
         // =========================================================================
         // МЕСТО ДЛЯ ВАШИХ ССЫЛОК НА МУЗЫКУ
         // =========================================================================
@@ -479,13 +461,15 @@
             const initialVideoId = extractYouTubeId(playlist[shuffledQueue[0]]) || "5qap5aO4i9A";
 
             ytPlayer = new YT.Player('youtube-player', {
-                height: '0',
-                width: '0',
+                height: '100%',
+                width: '100%',
                 videoId: initialVideoId,
                 playerVars: {
                     'playsinline': 1,
                     'controls': 0,
-                    'autoplay': 0
+                    'autoplay': 0,
+                    'disablekb': 1,
+                    'modestbranding': 1
                 },
                 events: {
                     'onReady': onPlayerReady,
