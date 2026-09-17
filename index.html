@@ -37,6 +37,7 @@
             pointer-events: none;
         }
 
+        /* VHS Эффект */
         .vhs-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -47,6 +48,7 @@
             opacity: 0.7;
         }
 
+        /* Центр сцены */
         .stage {
             position: relative;
             width: 100%;
@@ -96,6 +98,7 @@
             z-index: 12;
         }
         
+        /* Эквалайзер */
         .equalizer {
             display: flex;
             align-items: flex-end;
@@ -155,6 +158,7 @@
             display: inline-block;
         }
 
+        /* YouTube плеер под карточкой */
         #youtube-player-container {
             position: absolute;
             top: 0;
@@ -165,7 +169,7 @@
             overflow: hidden;
             z-index: 2;
             opacity: 0.15;
-            pointer-events: none; /* Возвращаем стандартное поведение, чтобы фрейм не перехватывал тапы */
+            pointer-events: auto;
         }
 
         #youtube-player {
@@ -173,6 +177,7 @@
             height: 100%;
         }
 
+        /* Слои орбиты для корректного наложения сзади и спереди */
         .orbit-layer-back {
             position: absolute;
             top: 50%;
@@ -247,6 +252,7 @@
 
     <div class="stage">
         <div class="player-wrapper">
+            <!-- Слой орбиты сзади плеера -->
             <div class="orbit-layer-back" id="orbitBack"></div>
 
             <div class="player-card" id="playerCard">
@@ -271,6 +277,7 @@
                 </div>
             </div>
 
+            <!-- Слой орбиты спереди плеера -->
             <div class="orbit-layer-front" id="orbitFront"></div>
         </div>
     </div>
