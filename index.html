@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>·radio·pirattorrent</title>
+    <title>radio·pirattorrent</title>
     <style>
         * {
             box-sizing: border-box;
@@ -350,6 +350,7 @@
         let shuffledQueue = [];
         let queueIndex = 0;
         let isReady = false;
+        let hasInteracted = false;
         let equalizerInterval = null;
 
         const playBtn = document.getElementById('playBtn');
@@ -455,11 +456,33 @@
         function onPlayerReady(event) {
             isReady = true;
             setupMediaSession();
-            // Автоматический запуск ровно через 1 секунду после загрузки страницы
+            
+            // Пробуем автозапуск через секунду
             setTimeout(() => {
-                playCurrentTrack();
+                tryAutoPlay();
             }, 1000);
         }
+
+        function tryAutoPlay() {
+            if (!isReady) return;
+            const actualIndex = shuffledQueue[queueIndex];
+            const videoId = extractYouTubeId(playlist[actualIndex]);
+            if (videoId) {
+                ytPlayer.loadVideoById(videoId);
+                ytPlayer.playVideo();
+            }
+        }
+
+        // Страховка для Instagram/мобильных браузеров: первое касание экрана запустит музыку, если автозапуск был заблокирован
+        document.addEventListener('pointerdown', () => {
+            if (!hasInteracted && isReady && ytPlayer) {
+                hasInteracted = true;
+                const state = ytPlayer.getPlayerState();
+                if (state !== YT.PlayerState.PLAYING) {
+                    playCurrentTrack();
+                }
+            }
+        }, { once: true });
 
         function playCurrentTrack() {
             if (!isReady || playlist.length === 0) return;
@@ -471,7 +494,6 @@
             }
         }
 
-        // Автопропуск трека при ошибке воспроизведения (если видео удалено или заблокировано)
         function onPlayerError(event) {
             stopEqualizer();
             queueIndex = (queueIndex + 1) % shuffledQueue.length;
@@ -502,6 +524,7 @@
 
         playBtn.addEventListener('click', () => {
             if (!isReady) return;
+            hasInteracted = true;
             const state = ytPlayer.getPlayerState();
             if (state === YT.PlayerState.PLAYING) {
                 ytPlayer.pauseVideo();
@@ -512,12 +535,14 @@
 
         nextBtn.addEventListener('click', () => {
             if (!isReady) return;
+            hasInteristed = true;
             queueIndex = (queueIndex + 1) % shuffledQueue.length;
             playCurrentTrack();
         });
 
         prevBtn.addEventListener('click', () => {
             if (!isReady) return;
+            hasInteristed = true;
             queueIndex = (queueIndex - 1 + shuffledQueue.length) % shuffledQueue.length;
             playCurrentTrack();
         });
