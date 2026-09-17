@@ -133,7 +133,6 @@
         button.main-play {
             width: 65px;
             height: 65px;
-            /* Убран смещающий padding, центрирование идет автоматически за счет flex */
         }
 
         /* Стили для иконки паузы (минималистичный белый квадратик) */
@@ -447,7 +446,8 @@
                 },
                 events: {
                     'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
                 }
             });
         }
@@ -455,7 +455,10 @@
         function onPlayerReady(event) {
             isReady = true;
             setupMediaSession();
-            playCurrentTrack();
+            // Автоматический запуск ровно через 1 секунду после загрузки страницы
+            setTimeout(() => {
+                playCurrentTrack();
+            }, 1000);
         }
 
         function playCurrentTrack() {
@@ -466,6 +469,13 @@
                 ytPlayer.loadVideoById(videoId);
                 ytPlayer.playVideo();
             }
+        }
+
+        // Автопропуск трека при ошибке воспроизведения (если видео удалено или заблокировано)
+        function onPlayerError(event) {
+            stopEqualizer();
+            queueIndex = (queueIndex + 1) % shuffledQueue.length;
+            playCurrentTrack();
         }
 
         function onPlayerStateChange(event) {
