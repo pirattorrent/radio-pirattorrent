@@ -137,12 +137,13 @@
         .controls {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 20px;
+            justify-content: space-between;
             width: 100%;
             position: relative;
             z-index: 12;
+            padding: 0 10px;
         }
+
         button {
             background: rgba(40, 40, 40, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -161,17 +162,19 @@
         button:active {
             transform: scale(0.95);
         }
-        button.main-play {
-            width: 65px;
-            height: 65px;
-        }
 
-        .pause-icon {
-            width: 14px;
-            height: 14px;
-            background-color: #fff;
-            border-radius: 2px;
-            display: inline-block;
+        #customPlayOverlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            background: rgba(40, 40, 40, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(43, 116, 143, 0.4);
+            opacity: 1;
         }
         
         #youtube-player-container {
@@ -182,9 +185,9 @@
             height: 100%;
             border-radius: 20px;
             overflow: hidden;
-            z-index: 8;           /* Ставим выше подложки карточки, но ниже кнопок */
+            z-index: 8;
             opacity: 0.15;
-            pointer-events: auto; /* Включаем реакцию на касания */
+            pointer-events: auto;
         }
 
         #youtube-player {
@@ -243,7 +246,7 @@
             position: absolute;
             top: 4px;
             width: 86%;
-            height: 38px;
+            height: 24px;
             background: #2b748f;
             border-radius: 4px;
             display: flex;
@@ -260,10 +263,12 @@
 
         .cassette-window {
             position: absolute;
-            bottom: 6px;
-            width: 70px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 74px;
             height: 22px;
-            background: rgba(10, 10, 10, 0.8);
+            background: rgba(10, 10, 10, 0.85);
             border: 1px solid #444;
             border-radius: 4px;
             display: flex;
@@ -338,24 +343,51 @@
             pointer-events: none;
         }
 
+        /* Наклейка винила */
         .vinyl-label {
-            width: 50px;
-            height: 50px;
+            width: 62px;
+            height: 62px;
             background: #2b748f;
             border-radius: 50%;
-            border: 2px solid #fff;
+            border: 2px solid rgba(255,255,255,0.3);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             z-index: 2;
+            box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
         }
 
+        /* Черная дырка в центре пластинки */
         .vinyl-hole {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             width: 10px;
             height: 10px;
             background: #0b0b0b;
             border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.9);
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        /* Текст hac kdj с разбивкой под центральную дырку */
+        .vinyl-label-text {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 6px;
+            font-size: 8.5px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            z-index: 3;
         }
 
         /* Орбита ссылок */
@@ -451,6 +483,8 @@
                     <div id="youtube-player"></div>
                 </div>
 
+                <button id="customPlayOverlay" title="Воспроизвести">▶</button>
+
                 <div class="logo">Radio Pirattorrent</div>
 
                 <div class="equalizer" id="equalizer">
@@ -463,7 +497,6 @@
 
                 <div class="controls">
                     <button id="prevBtn" title="Назад">⏮</button>
-                    <button id="playBtn" class="main-play" title="Плей/Пауза">▶</button>
                     <button id="nextBtn" title="Вперед">⏭</button>
                 </div>
             </div>
@@ -476,6 +509,10 @@
         <div class="vinyl" id="vinylElement">
             <div class="vinyl-label">
                 <div class="vinyl-hole"></div>
+                <div class="vinyl-label-text">
+                    <span>hck</span>
+                    <span>mnd</span>
+                </div>
             </div>
         </div>
     </div>
@@ -483,48 +520,6 @@
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
-        const playlist = [
-            "https://youtu.be/uj8hM7efDA4?si=YfOuBCbvE_SEFarB",
-            "https://youtu.be/udbUIyP6wpM?si=C08Eyh8pwtk_JBgB",
-            "https://youtu.be/TySWfSLzLzk?si=l374eJsD9SjGLRae",
-            "https://m.youtube.com/watch?v=vK9f5uZLXGc",
-            "https://m.youtube.com/watch?v=PFaBWFb0WR8",
-            "https://m.youtube.com/watch?v=uj8hM7efDA4",
-            "https://youtu.be/pPlQiLBChh8?si=pBMsWLOsnstT_Ljl",
-            "https://youtu.be/zUozY3_k14o?si=5LRHPaeIw_EdWrLn",
-            "https://youtu.be/S0FWysxfPI4?si=xB4YfLBVWykoaybs",
-            "https://youtu.be/V-VPxxiq4UA?si=S15193M2o_ZZ9TDB",
-            "https://youtu.be/Ye5PgLGFzuw?si=RAfPY7kvBO-B3BPG",
-            "https://youtu.be/qqrsW8bWtlI?si=TLD3wvMrML_FNrrL",
-            "https://youtu.be/jns_vEOYRQE?si=6x9gthxn0KXQuR95",
-            "https://youtu.be/eqyxRtnzRV8?si=ZsDxe9scuCm77BLN",
-            "https://youtu.be/pfidfAakm1I?si=8MHvt-9w_oeF2dh0",
-            "https://youtu.be/fC5nb9Jaslw?si=RcSHyAqke3fqZTp-",
-            "https://youtu.be/6u1PK7R5E_o?si=xl_rUjQGECiZOgqx",
-            "https://youtu.be/GZ-VNZ_TL98?si=6wIWkU3_47jtiKAU",
-            "https://youtu.be/qzCehBoQRec?si=PJmu2r_A4Y6aI3mA",
-            "https://youtu.be/DPXYE1iF-nA?si=AaN1UVlmZVTOOIPc",
-            "https://youtu.be/GJz12hLYqlw?si=8g6YmDauW5yGB8Rr",
-            "https://youtu.be/BiPauJzpabA?si=rnAxqHAOsPZi2mAU",
-            "https://youtu.be/1ugutshhRwI?si=Ws5YPvc-geVeHiwe",
-            "https://youtu.be/dQ5rT5YIU_Q?si=-JZ1mufhSXMTLVsa",
-            "https://youtu.be/io4QS_byC9s?si=dEM5z7R9B0kKG99t",
-            "https://youtu.be/af1Gpaulygg?si=hKyUCThcssycYbUU",
-            "https://youtu.be/VixSKSPpuNU?si=94WyvgURgJ4DTa_L",
-            "https://youtu.be/raGxwa6jxBY?si=Kj2_lZCcUmxUb-E4",
-            "https://youtu.be/gXPXG1JR_qE?si=sLPNEUpTvgdfiPqw",
-            "https://youtu.be/noUojfafYeA?si=85obM8obTuaNwKv-",
-            "https://youtu.be/ec8Rz88aDEg?si=IdyUnlF6iYBVJ92k",
-            "https://youtu.be/ec8Rz88aDEg?si=DbVnjeH5_ZKoh8EC",
-            "https://youtu.be/EUkUuzzaIak?si=XPNaeBFgE6pWvMo4",
-            "https://youtu.be/c7vGE0DZaX0?si=SazVnFFBkVBH85Ws",
-            "https://youtu.be/EUHycuDEjd0?si=NmkoubOXSygK236n",
-            "https://youtu.be/N9GN6QeZ1Y0?si=vX-O4We97dMluiy4"
-
-            
-            
-        ];
-
         const socialLinks = [
             {
                 url: "https://youtube.com/@pirattorrents",
@@ -640,17 +635,16 @@
             initAudioCtx();
             if (!audioCtx) return;
 
-            const bufferSize = audioCtx.sampleRate * 0.06; 
+            const bufferSize = audioCtx.sampleRate * 0.08; 
             const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
             const data = buffer.getChannelData(0);
-            let b0 = 0, b1 = 0, b2 = 0;
-
+            
             for (let i = 0; i < bufferSize; i++) {
-                const white = Math.random() * 2 - 1;
-                b0 = 0.99886 * b0 + white * 0.0555179;
-                b1 = 0.99332 * b1 + white * 0.0750759;
-                b2 = 0.96900 * b2 + white * 0.1538520;
-                data[i] = (b0 + b1 + b2) * 0.5;
+                let sample = (Math.random() * 2 - 1);
+                if (Math.random() < 0.03) {
+                    sample *= (Math.random() * 4);
+                }
+                data[i] = sample;
             }
 
             const noiseSource = audioCtx.createBufferSource();
@@ -658,13 +652,14 @@
 
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'bandpass';
-            filter.frequency.setValueAtTime(Math.min(12000, Math.max(1500, Math.abs(speed) * 300)), audioCtx.currentTime);
-            filter.Q.value = 6.0;
+            const targetFreq = Math.min(4500, Math.max(350, Math.abs(speed) * 220));
+            filter.frequency.setValueAtTime(targetFreq, audioCtx.currentTime);
+            filter.Q.value = 5.0;
 
             const gainNode = audioCtx.createGain();
-            const intensity = Math.min(4.0, Math.abs(speed) / 2.0);
-            gainNode.gain.setValueAtTime(intensity * 2.5, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.07);
+            const intensity = Math.min(1.5, Math.abs(speed) / 1.5);
+            gainNode.gain.setValueAtTime(intensity * 0.7, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
 
             noiseSource.connect(filter);
             filter.connect(gainNode);
@@ -701,7 +696,7 @@
 
             const cassetteContainer = document.getElementById('cassetteContainer');
             if (cassetteContainer) {
-                let cassettePulse = 1 + Math.sin(Date.now() / 400) * 0.04;
+                let cassettePulse = 1 + Math.sin(Date.now() / 450) * 0.02;
                 cassetteContainer.style.transform = `rotate(-10deg) scale(${cassettePulse})`;
             }
 
@@ -720,10 +715,10 @@
             const deltaX = clientX - startX;
             startX = clientX;
             
-            scratchOffset += deltaX * 22.0;
+            scratchOffset += deltaX * 10.0;
 
             const now = Date.now();
-            if (now - lastTime > 2 && Math.abs(deltaX) > 0.2) { 
+            if (now - lastTime > 20 && Math.abs(deltaX) > 0.8) { 
                 playScratchSound(deltaX);
                 lastTime = now;
             }
@@ -789,7 +784,7 @@
             const side = Math.floor(Math.random() * 4);
             let startX, startY, endX, endY;
 
-        switch(side) {
+            switch(side) {
                 case 0: 
                     startX = -150;
                     startY = Math.random() * h;
@@ -864,7 +859,6 @@
 
         function triggerExplosion(x, y) {
             isExploded = true;
-            // Звук баса убран по запросу
 
             fragments = [];
             const count = 70;
@@ -1066,7 +1060,7 @@
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                         ctx.fill();
-                        });
+                    });
 
                     ctx.save();
                     ctx.translate(cometState.x, cometState.y);
@@ -1116,7 +1110,6 @@
                     }
                     ctx.stroke();
 
-                    // Ограничение деформации при приближении (чтобы комета не вытягивалась слишком сильно)
                     let stretchDamp = Math.max(0.15, 1.0 / (1.0 + scaleFactor * 0.35));
                     let stretchX = 1 + (eqLevel * 0.7 + Math.sin(cometState.shimmer * 5) * 0.25) * stretchDamp;
                     let stretchY = 1 - (eqLevel * 0.3 + Math.cos(cometState.shimmer * 4) * 0.2) * stretchDamp;
@@ -1126,8 +1119,7 @@
                     ctx.ellipse(0, 0, (6 * scaleFactor) * stretchX, (3.5 * scaleFactor) * stretchY, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Добавление резких разноцветных токов и частиц в ядре под музыку
-                    const coreColors = ['#a855f7', '#eab308', '#ffffff', '#facc15', '#222222', '#84cc16']; // фиолетовый, золотистый, белый, желтый, черный, салаттовый
+                    const coreColors = ['#a855f7', '#eab308', '#ffffff', '#facc15', '#222222', '#84cc16'];
                     const currentCount = 9;
                     ctx.lineWidth = 0.7;
                     for (let c = 0; c < currentCount; c++) {
@@ -1138,7 +1130,7 @@
                         ctx.shadowColor = col;
                         ctx.beginPath();
                         let startR = 0.5 * scaleFactor;
-                        let endR = (3.2 + Math.sin(cometState.shimmer * 4 + c) * 1.8 + eqLevel * 3.0) * scaleFactor; // Выходят за границу ядра
+                        let endR = (3.2 + Math.sin(cometState.shimmer * 4 + c) * 1.8 + eqLevel * 3.0) * scaleFactor;
                         let sx = Math.cos(cAngle) * startR;
                         let sy = Math.sin(cAngle) * startR;
                         let ex = Math.cos(cAngle + 0.15) * endR;
@@ -1148,7 +1140,6 @@
                         ctx.stroke();
                     }
 
-                    // Мелкие космические точки-частицы внутри ядра
                     for (let p = 0; p < 6; p++) {
                         let pAngle = cometState.shimmer * 4 + p * 1.1;
                         let pDist = (Math.sin(cometState.shimmer * 2 + p) * 0.5 + 0.5) * (2.0 * scaleFactor);
@@ -1222,8 +1213,8 @@
                 if (fragments.length === 0 && isExploded) {
                     isExploded = false;
                     cometTimer = Date.now() + 1000; 
-                    }
-                   }
+                }
+            }
 
             requestAnimationFrame(renderFX);
         }
@@ -1234,6 +1225,7 @@
 
         // --- АУДИО И ПЛЕЕР ---
         const cassetteContainer = document.getElementById('cassetteContainer');
+        const customPlayOverlay = document.getElementById('customPlayOverlay');
         let mediaElemSource = null;
         let lowpassFilter = null;
         let delayNode = null;
@@ -1306,46 +1298,17 @@
         window.addEventListener('touchend', stopChewing);
 
         let ytPlayer = null;
-        let shuffledQueue = [];
-        let queueIndex = 0;
         let isReady = false;
         let equalizerInterval = null;
+        let totalPlaylistTracks = 15;
 
-        const playBtn = document.getElementById('playBtn');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const bars = document.querySelectorAll('.equalizer .bar');
 
-        function extractYouTubeId(url) {
-            if (!url) return null;
-            try {
-                const parsedUrl = new URL(url);
-                if (parsedUrl.hostname === 'youtu.be') return parsedUrl.pathname.slice(1);
-                if (parsedUrl.hostname.includes('youtube.com')) {
-                    if (parsedUrl.searchParams.has('v')) return parsedUrl.searchParams.get('v');
-                    const parts = parsedUrl.pathname.split('/');
-                    const index = parts.indexOf('embed') !== -1 ? parts.indexOf('embed') : parts.indexOf('shorts');
-                    if (index !== -1 && parts[index + 1]) return parts[index + 1];
-                }
-            } catch (e) {}
-            return null;
-        }
-
-        function generateShuffledQueue() {
-            shuffledQueue = [...Array(playlist.length).keys()];
-            for (let i = shuffledQueue.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffledQueue[i], shuffledQueue[j]] = [shuffledQueue[j], shuffledQueue[i]];
-            }
-            queueIndex = 0;
-        }
-
-        function startEqualizer(videoId) {
+        function startEqualizer() {
             stopEqualizer();
-            let seed = 0;
-            if (videoId) {
-                for (let i = 0; i < videoId.length; i++) seed += videoId.charCodeAt(i);
-            }
+            let seed = Math.random() * 100;
 
             equalizerInterval = setInterval(() => {
                 bars.forEach((bar, index) => {
@@ -1358,95 +1321,98 @@
         function stopEqualizer() {
             if (equalizerInterval) {
                 clearInterval(equalizerInterval);
-                equalizerInterval = null;
             }
             bars.forEach(bar => { bar.style.height = '10px'; });
         }
 
         function onYouTubeIframeAPIReady() {
-            if (playlist.length === 0) return;
-            generateShuffledQueue();
-            const initialVideoId = extractYouTubeId(playlist[shuffledQueue[0]]) || "5qap5aO4i9A";
-
             ytPlayer = new YT.Player('youtube-player', {
                 height: '100%',
                 width: '100%',
-                videoId: initialVideoId,
                 playerVars: {
                     'playsinline': 1,
                     'controls': 1,
                     'autoplay': 0,
                     'disablekb': 1,
-                    'modestbranding': 1
+                    'modestbranding': 1,
+                    'listType': 'playlist',
+                    'list': 'PLMvijLS81rx7XngoXyI2EudI_uS0KLNVN'
                 },
                 events: {
                     'onReady': (e) => { 
                         isReady = true; 
                         const iframeEl = document.querySelector('#youtube-player-container iframe');
                         if (iframeEl) setupAudioNodes(iframeEl);
+
+                        if (typeof ytPlayer.playVideoAt === 'function') {
+                            const randomStartIndex = Math.floor(Math.random() * totalPlaylistTracks);
+                            ytPlayer.playVideoAt(randomStartIndex);
+                        }
                     },
                     'onStateChange': onPlayerStateChange,
                     'onError': (e) => {
                         stopEqualizer();
-                        queueIndex = (queueIndex + 1) % shuffledQueue.length;
-                        playCurrentTrack();
                     }
                 }
             });
         }
 
-        function playCurrentTrack() {
-            if (!isReady || playlist.length === 0) return;
-            const actualIndex = shuffledQueue[queueIndex];
-            const videoId = extractYouTubeId(playlist[actualIndex]);
-            if (videoId) {
-                ytPlayer.loadVideoById(videoId);
-                ytPlayer.playVideo();
-            }
-        }
-
         function onPlayerStateChange(event) {
-            const actualIndex = shuffledQueue[queueIndex];
-            const currentVideoId = extractYouTubeId(playlist[actualIndex]);
-
             if (event.data === YT.PlayerState.PLAYING) {
-                playBtn.innerHTML = '<span class="pause-icon"></span>';
-                startEqualizer(currentVideoId);
+                startEqualizer();
+                if (customPlayOverlay) {
+                    customPlayOverlay.style.opacity = '0';
+                }
             } 
             else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.CUED) {
-                playBtn.innerHTML = '▶';
                 stopEqualizer();
+                if (customPlayOverlay) {
+                    customPlayOverlay.style.opacity = '1';
+                }
             }
             else if (event.data === YT.PlayerState.ENDED) {
                 stopEqualizer();
-                queueIndex++;
-                if (queueIndex >= shuffledQueue.length) generateShuffledQueue();
-                playCurrentTrack();
+                playRandomTrack();
             }
         }
 
-        playBtn.addEventListener('click', () => {
+        function playRandomTrack() {
+            if (!isReady || !ytPlayer) return;
+            if (typeof ytPlayer.getPlaylist === 'function' && typeof ytPlayer.playVideoAt === 'function') {
+                const playlist = ytPlayer.getPlaylist();
+                if (playlist && playlist.length > 0) {
+                    let currentIndex = ytPlayer.getPlaylistIndex();
+                    let nextIndex;
+                    do {
+                        nextIndex = Math.floor(Math.random() * playlist.length);
+                    } while (playlist.length > 1 && nextIndex === currentIndex);
+                    
+                    ytPlayer.playVideoAt(nextIndex);
+                } else {
+                    const randomIdx = Math.floor(Math.random() * totalPlaylistTracks);
+                    ytPlayer.playVideoAt(randomIdx);
+                }
+            }
+        }
+
+        nextBtn.addEventListener('click', () => {
             initAudioCtx();
-            if (!isReady) return;
-            const state = ytPlayer.getPlayerState();
-            if (state === YT.PlayerState.PLAYING) {
-                ytPlayer.pauseVideo();
-            } else {
-                if (state === -1 || state === YT.PlayerState.CUED) playCurrentTrack();
-                else ytPlayer.playVideo();
+            if (!isReady || !ytPlayer) return;
+            playRandomTrack();
+            if (customPlayOverlay) {
+                customPlayOverlay.style.opacity = '0';
             }
         });
 
-        nextBtn.addEventListener('click', () => {
-            if (!isReady) return;
-            queueIndex = (queueIndex + 1) % shuffledQueue.length;
-            playCurrentTrack();
-        });
-
         prevBtn.addEventListener('click', () => {
-            if (!isReady) return;
-            queueIndex = (queueIndex - 1 + shuffledQueue.length) % shuffledQueue.length;
-            playCurrentTrack();
+            initAudioCtx();
+            if (!isReady || !ytPlayer) return;
+            if (typeof ytPlayer.previousVideo === 'function') {
+                ytPlayer.previousVideo();
+            }
+            if (customPlayOverlay) {
+                customPlayOverlay.style.opacity = '0';
+            }
         });
     </script>
 </body>
